@@ -1,0 +1,22 @@
+{
+  "name": "TimeQuest",
+  "short_name": "TimeQuest",
+  "description": "時間管理 PWA App — 排程、任務、習慣追蹤",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1923",
+  "theme_color": "#0F1923",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

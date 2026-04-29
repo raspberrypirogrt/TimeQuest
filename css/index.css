@@ -1,0 +1,401 @@
+/* ========================================
+   TimeQuest — Design System & Global Styles
+   ======================================== */
+
+:root {
+  /* Primary Palette */
+  --color-primary: #4A7C7E;
+  --color-primary-light: #6BA3A5;
+  --color-primary-dark: #2D5E60;
+  --color-primary-bg: rgba(74, 124, 126, 0.12);
+
+  /* Accent */
+  --color-accent: #5B8FB9;
+  --color-accent-hover: #4A7DA5;
+  --color-accent-light: rgba(91, 143, 185, 0.15);
+
+  /* Backgrounds */
+  --color-bg: #0F1923;
+  --color-bg-card: #1A2A36;
+  --color-bg-elevated: #243442;
+  --color-bg-hover: rgba(255, 255, 255, 0.04);
+  --color-bg-modal: #1E2E3A;
+
+  /* Text */
+  --color-text: #E8EDF2;
+  --color-text-secondary: #8A9BB0;
+  --color-text-muted: #4A5B6E;
+  --color-text-inverse: #0F1923;
+
+  /* Status */
+  --color-success: #4CAF50;
+  --color-success-light: rgba(76, 175, 80, 0.15);
+  --color-success-glow: rgba(76, 175, 80, 0.25);
+  --color-danger: #E57373;
+  --color-danger-light: rgba(229, 115, 115, 0.15);
+  --color-warning: #FFB74D;
+
+  /* Tags */
+  --color-tag-progress: #FF8A65;
+  --color-tag-progress-bg: rgba(255, 138, 101, 0.15);
+  --color-tag-habit: #81C784;
+  --color-tag-habit-bg: rgba(129, 199, 132, 0.15);
+
+  /* Timeline */
+  --timeline-width: 4px;
+  --timeline-track: #2A3A46;
+  --timeline-filled: #4A7C7E;
+  --timeline-bubble-bg: #3A6668;
+  --timeline-bubble-border: #4A7C7E;
+  --timeline-current-glow: rgba(106, 255, 140, 0.35);
+  --timeline-current-color: #6AFF8C;
+
+  /* Borders */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-light: rgba(255, 255, 255, 0.03);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-fab: 0 4px 20px rgba(91, 143, 185, 0.35);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 50%;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+
+  /* Typography */
+  --font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-md: 17px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 28px;
+  --font-size-3xl: 36px;
+  --font-size-hero: 48px;
+
+  /* Z-index */
+  --z-page: 1;
+  --z-indicator: 10;
+  --z-fab: 20;
+  --z-tab: 30;
+  --z-modal-overlay: 100;
+  --z-modal: 110;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --tab-bar-height: 56px;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --header-height: 100px;
+}
+
+/* ========================================
+   Reset & Base
+   ======================================== */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.safe-area-top {
+  height: var(--safe-area-top);
+  min-height: 0;
+  flex-shrink: 0;
+  background: var(--color-bg);
+}
+
+.safe-area-bottom {
+  height: var(--safe-area-bottom);
+  min-height: 0;
+  flex-shrink: 0;
+  background: var(--color-bg);
+}
+
+/* ========================================
+   Pages Container
+   ======================================== */
+
+#pages-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+  z-index: var(--z-page);
+}
+
+.page.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ========================================
+   Sub-page Indicators
+   ======================================== */
+
+.sub-page-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 0 2px;
+  z-index: var(--z-indicator);
+}
+
+.indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-text-muted);
+  transition: all var(--transition-base);
+}
+
+.indicator-dot.active {
+  width: 20px;
+  background: var(--color-primary-light);
+  border-radius: 3px;
+}
+
+/* ========================================
+   Swipe Container
+   ======================================== */
+
+.swipe-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.swipe-track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transition: transform var(--transition-slow);
+  will-change: transform;
+}
+
+.swipe-track.swiping {
+  transition: none;
+}
+
+.sub-page {
+  width: 50%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 var(--space-lg);
+}
+
+/* ========================================
+   Page Header
+   ======================================== */
+
+.page-header {
+  padding: var(--space-lg) 0 var(--space-md);
+}
+
+.page-date {
+  font-size: var(--font-size-2xl);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+
+.page-date .year {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.page-weekday {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-xs);
+}
+
+/* ========================================
+   Week Strip
+   ======================================== */
+
+.week-strip {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-md) 0;
+  margin-top: var(--space-sm);
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+  min-width: 36px;
+}
+
+.week-day:active {
+  background: var(--color-bg-hover);
+}
+
+.week-day-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.week-day-num {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.week-day.today .week-day-num {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.week-day.selected .week-day-num {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.week-day-dots {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+  align-items: center;
+}
+
+.week-day-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+}
+
+.week-day-dot.schedule {
+  background: var(--color-primary-light);
+}
+
+.week-day-dot.task {
+  background: var(--color-tag-progress);
+}
+
+.week-day-dot.habit {
+  background: var(--color-tag-habit);
+}
+
+/* ========================================
+   Scrollbar
+   ======================================== */
+
+.sub-page::-webkit-scrollbar {
+  width: 0;
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.text-muted { color: var(--color-text-muted); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-success { color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
+.text-warning { color: var(--color-warning); }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl) var(--space-lg);
+  color: var(--color-text-muted);
+  text-align: center;
+  gap: var(--space-md);
+}
+
+.empty-state svg {
+  width: 48px;
+  height: 48px;
+  opacity: 0.3;
+}
+
+.empty-state p {
+  font-size: var(--font-size-sm);
+}

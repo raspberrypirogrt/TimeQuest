@@ -1,0 +1,251 @@
+/* ========================================
+   Timeline — Core Visual Component
+   ======================================== */
+
+.timeline-container {
+  position: relative;
+  padding-left: 60px;
+  padding-bottom: 80px;
+  min-height: 100%;
+}
+
+/* Time labels on the left */
+.timeline-hour-label {
+  position: absolute;
+  left: 0;
+  width: 50px;
+  text-align: right;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  transform: translateY(-50%);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-hour-label.current-time {
+  color: var(--timeline-current-color);
+  font-weight: 700;
+}
+
+/* Track (vertical line) */
+.timeline-track {
+  position: absolute;
+  left: 56px;
+  top: 0;
+  bottom: 0;
+  width: var(--timeline-width);
+  background: var(--timeline-track);
+  border-radius: 2px;
+  overflow: visible;
+}
+
+/* Filled portion (up to current time) */
+.timeline-track-filled {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  background: linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, var(--color-primary-light) 100%);
+  border-radius: 2px;
+  transition: height 1s linear;
+}
+
+/* Current time indicator */
+.timeline-current-indicator {
+  position: absolute;
+  left: 56px;
+  width: var(--timeline-width);
+  transform: translateX(0) translateY(-50%);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.timeline-current-dot {
+  width: 12px;
+  height: 12px;
+  background: var(--timeline-current-color);
+  border-radius: var(--radius-full);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 12px var(--timeline-current-glow), 0 0 24px var(--timeline-current-glow);
+}
+
+.timeline-current-line {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  right: -100vw;
+  height: 1px;
+  background: linear-gradient(90deg, var(--timeline-current-color), transparent 60%);
+  transform: translateY(-50%);
+  opacity: 0.4;
+}
+
+/* ========================================
+   Timeline Bubble (Schedule Item)
+   ======================================== */
+
+.timeline-bubble-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 60px;
+  z-index: 2;
+}
+
+/* The bubble on the track */
+.timeline-bubble {
+  position: absolute;
+  left: 56px;
+  width: 44px;
+  transform: translateX(-20px);
+  background: var(--timeline-bubble-bg);
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  z-index: 3;
+  transition: background var(--transition-fast);
+  overflow: hidden;
+}
+
+.timeline-bubble::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.timeline-bubble.filled {
+  background: var(--color-primary-dark);
+}
+
+.timeline-bubble-icon {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  z-index: 1;
+}
+
+/* Content area */
+.timeline-content {
+  flex: 1;
+  padding-left: 36px;
+  padding-right: 8px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.timeline-content:active {
+  opacity: 0.7;
+}
+
+.timeline-time-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.timeline-time-text .overnight-badge {
+  font-size: 9px;
+  color: var(--color-warning);
+  font-weight: 700;
+  vertical-align: super;
+  line-height: 1;
+}
+
+.timeline-time-text .duration {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.timeline-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.timeline-remaining {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* Checkbox area */
+.timeline-check {
+  flex-shrink: 0;
+  padding: var(--space-sm);
+}
+
+/* ========================================
+   Timeline Item States
+   ======================================== */
+
+.timeline-item {
+  transition: opacity var(--transition-base);
+}
+
+.timeline-item.completed .timeline-title {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.timeline-item.dimmed {
+  opacity: 0.4;
+}
+
+.timeline-item.dimmed .timeline-bubble {
+  background: var(--color-bg-elevated);
+}
+
+/* ========================================
+   Timeline Hints (between items)
+   ======================================== */
+
+.timeline-hint {
+  position: absolute;
+  left: 80px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.timeline-hint svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ========================================
+   Schedule Mode Indicator
+   ======================================== */
+
+.schedule-mode-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-primary-bg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-light);
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+}
