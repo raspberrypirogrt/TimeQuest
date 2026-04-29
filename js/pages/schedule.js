@@ -8,7 +8,7 @@ import { ICON_LIST, getIcon, uiIcon } from '../utils/icons.js';
 import { renderTimeline } from '../components/timeline.js';
 import { renderTaskList } from '../components/taskList.js';
 import { renderWeekSelector } from '../components/weekSelector.js';
-import { openScheduleAddModal, openScheduleEditModal, openTaskAddModal, openTaskEditModal } from './home.js';
+import { openScheduleAddModal, openScheduleEditModal, openTaskEditModal } from './home.js';
 import modalManager from '../components/modal.js';
 
 let selectedDate = todayStr();
@@ -27,7 +27,14 @@ export async function initSchedule() {
 async function renderScheduleTimeline() {
   const container = document.getElementById('schedule-timeline');
   const pastDay = isPast(selectedDate) && !isToday(selectedDate);
-  
+
+  // Overnight logic: also fetch overnight schedules from previous day
+  const prevDay = addDays(selectedDate, -1);
+  const daySchedules = await db.getSchedulesByDate(selectedDate);
+  const prevDaySchedules = await db.getSchedulesByDate(prevDay);
+  const overnightFromPrev = prevDaySchedules.filter(s => s.isOvernight);
+  const schedules = [...overnightFromPrev, ...daySchedules];
+
   // Build header with week selector
   let headerHtml = `
     <div class="page-header">
@@ -36,48 +43,54 @@ async function renderScheduleTimeline() {
     </div>
     <div id="schedule-week-selector"></div>
   `;
-  
+
   if (isTemplateMode) {
     const dow = parseDate(selectedDate).getDay();
     const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
     headerHtml += `<div class="schedule-mode-label">${uiIcon('template', 14)} 預設模板 — ${dayNames[dow]}</div>`;
   }
-  
+
   container.innerHTML = headerHtml + '<div id="schedule-timeline-body"></div>';
-  
-  // Render week selector
+
+  // Render week selector with prev/next week navigation
   const weekContainer = document.getElementById('schedule-week-selector');
   const weekDates = getWeekDates(selectedDate);
-  
+
   // Build dot map
   const dotMap = {};
   for (const d of weekDates) {
-    const schedules = await db.getSchedulesByDate(d);
+    const scheds = await db.getSchedulesByDate(d);
     const tasks = await db.getTasksByDate(d);
     const dots = [];
-    if (schedules.length > 0) dots.push('schedule');
+    if (scheds.length > 0) dots.push('schedule');
     if (tasks.some(t => t.category === 'progress')) dots.push('task');
     if (tasks.some(t => t.category === 'habit')) dots.push('habit');
     if (dots.length > 0) dotMap[d] = dots;
   }
-  
+
   renderWeekSelector(weekContainer, {
     selectedDate,
     dotMap,
+    showWeekNav: true,
     onSelect: (date) => {
       selectedDate = date;
       renderScheduleTimeline();
       renderScheduleTasks();
     },
+    onWeekChange: (newDate) => {
+      selectedDate = newDate;
+      renderScheduleTimeline();
+      renderScheduleTasks();
+    },
   });
-  
+
   const body = document.getElementById('schedule-timeline-body');
-  
+
   if (isTemplateMode) {
     // Template mode
     const dow = parseDate(selectedDate).getDay();
     const templates = await db.getTemplatesByDay(dow);
-    
+
     const templateAsSchedules = templates.map(t => ({
       id: t.id,
       startTime: t.startTime,
@@ -87,7 +100,7 @@ async function renderScheduleTimeline() {
       icon: t.icon,
       completed: false,
     }));
-    
+
     renderTimeline(body, {
       schedules: templateAsSchedules,
       showFill: false,
@@ -98,21 +111,14 @@ async function renderScheduleTimeline() {
       },
     });
   } else {
-    // Schedule mode
-    const schedules = await db.getSchedulesByDate(selectedDate);
-    
+    // Normal schedule mode
+    // No checkboxes on schedule page — only show completion status for past days
     renderTimeline(body, {
       schedules,
-      showFill: isToday(selectedDate),
-      showCheck: !pastDay,
+      showFill: false,
+      showCheck: false,    // Never show checkboxes on schedule page
       isPast: pastDay,
-      onCheck: async (id, checked) => {
-        const item = schedules.find(s => s.id === id);
-        if (item) {
-          item.completed = checked;
-          await db.updateSchedule(item);
-        }
-      },
+      onCheck: null,
       onClick: (item) => {
         if (!pastDay) {
           openScheduleEditModal(item, () => renderScheduleTimeline());
@@ -128,7 +134,7 @@ async function renderScheduleTimeline() {
 
 async function renderScheduleTasks() {
   const container = document.getElementById('schedule-tasks');
-  
+
   let headerHtml = `
     <div class="page-header">
       <div class="page-date">${formatDateDisplay(selectedDate)}</div>
@@ -139,9 +145,9 @@ async function renderScheduleTasks() {
       <button class="segment-btn ${taskViewMode === 'pool' ? 'active' : ''}" data-mode="pool">任務池</button>
     </div>
   `;
-  
+
   container.innerHTML = headerHtml + '<div id="schedule-tasks-body"></div>';
-  
+
   // Toggle binding
   container.querySelectorAll('.segment-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -149,18 +155,18 @@ async function renderScheduleTasks() {
       renderScheduleTasks();
     });
   });
-  
+
   const body = document.getElementById('schedule-tasks-body');
-  
+
   if (taskViewMode === 'today') {
     const tasks = await db.getTasksByDate(selectedDate);
     const topLevel = tasks.filter(t => !t.parentId);
-    
+
     const subtasksMap = {};
     for (const task of topLevel) {
       subtasksMap[task.id] = await db.getSubtasks(task.id);
     }
-    
+
     renderTaskList(body, {
       tasks: topLevel,
       subtasksMap,
@@ -194,26 +200,26 @@ async function renderScheduleTasks() {
 
 async function renderTaskPool(container) {
   const tasks = await db.getUnscheduledTasks();
-  
+
   if (tasks.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           ${uiIcon('inbox', 48).replace(/<\/?svg[^>]*>/g, '')}
         </svg>
-        <p>任務池是空的</p>
+        <p>任務池是空的<br>點擊 + 新增任務到任務池</p>
       </div>
     `;
     return;
   }
-  
+
   let html = '<div class="task-list stagger-in">';
-  
+
   tasks.forEach((task) => {
     const categoryTag = task.category === 'habit'
       ? `<span class="tag tag-habit">習慣</span>`
       : `<span class="tag tag-progress">進度</span>`;
-    
+
     html += `
       <div class="task-pool-item" data-id="${task.id}">
         <div class="task-item-info">
@@ -229,10 +235,10 @@ async function renderTaskPool(container) {
       </div>
     `;
   });
-  
+
   html += '</div>';
   container.innerHTML = html;
-  
+
   // Bind add-to-today
   container.querySelectorAll('[data-action="add-today"]').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -257,7 +263,7 @@ async function openTemplateEditModal(item, dayOfWeek, onDone) {
       ${getIcon(ic.key)}
     </button>
   `).join('');
-  
+
   modalManager.open({
     title: '編輯模板',
     body: `
@@ -274,7 +280,7 @@ async function openTemplateEditModal(item, dayOfWeek, onDone) {
       </div>
       <div class="form-group">
         <label class="form-label">事項名稱</label>
-        <input type="text" class="form-input" id="modal-title" value="${item.title}">
+        <input type="text" class="form-input" id="modal-input-title" value="${item.title}">
       </div>
       <div class="form-group">
         <label class="form-label">圖示</label>
@@ -289,28 +295,28 @@ async function openTemplateEditModal(item, dayOfWeek, onDone) {
       <button class="btn btn-primary" id="modal-save">儲存</button>
     `,
   });
-  
+
   setupIconPicker();
-  
+
   document.getElementById('modal-delete').onclick = async () => {
     await db.deleteTemplate(item.id);
     modalManager.close();
     if (onDone) onDone();
   };
-  
+
   document.getElementById('modal-cancel').onclick = () => modalManager.close();
   document.getElementById('modal-save').onclick = async () => {
     const startTime = document.getElementById('modal-start-time').value;
     const endTime = document.getElementById('modal-end-time').value;
-    const title = document.getElementById('modal-title').value.trim();
+    const title = document.getElementById('modal-input-title').value.trim();
     const icon = document.querySelector('.icon-option.selected')?.dataset.icon || 'default';
-    
+
     if (!title) return;
-    
+
     const [sh, sm] = startTime.split(':').map(Number);
     const [eh, em] = endTime.split(':').map(Number);
     const isOvernight = (eh * 60 + em) <= (sh * 60 + sm);
-    
+
     await db.updateTemplate({
       id: item.id,
       dayOfWeek,
@@ -320,7 +326,7 @@ async function openTemplateEditModal(item, dayOfWeek, onDone) {
       title,
       icon,
     });
-    
+
     modalManager.close();
     if (onDone) onDone();
   };
@@ -332,7 +338,7 @@ async function openTemplateAddModal(dayOfWeek, onDone) {
       ${getIcon(ic.key)}
     </button>
   `).join('');
-  
+
   modalManager.open({
     title: '新增模板',
     body: `
@@ -349,7 +355,7 @@ async function openTemplateAddModal(dayOfWeek, onDone) {
       </div>
       <div class="form-group">
         <label class="form-label">事項名稱</label>
-        <input type="text" class="form-input" id="modal-title" placeholder="輸入事項名稱...">
+        <input type="text" class="form-input" id="modal-input-title" placeholder="輸入事項名稱...">
       </div>
       <div class="form-group">
         <label class="form-label">圖示</label>
@@ -363,22 +369,22 @@ async function openTemplateAddModal(dayOfWeek, onDone) {
       <button class="btn btn-primary" id="modal-save">新增</button>
     `,
   });
-  
+
   setupIconPicker();
-  
+
   document.getElementById('modal-cancel').onclick = () => modalManager.close();
   document.getElementById('modal-save').onclick = async () => {
     const startTime = document.getElementById('modal-start-time').value;
     const endTime = document.getElementById('modal-end-time').value;
-    const title = document.getElementById('modal-title').value.trim();
+    const title = document.getElementById('modal-input-title').value.trim();
     const icon = document.querySelector('.icon-option.selected')?.dataset.icon || 'default';
-    
+
     if (!title) return;
-    
+
     const [sh, sm] = startTime.split(':').map(Number);
     const [eh, em] = endTime.split(':').map(Number);
     const isOvernight = (eh * 60 + em) <= (sh * 60 + sm);
-    
+
     await db.addTemplate({
       id: uuid(),
       dayOfWeek,
@@ -388,7 +394,7 @@ async function openTemplateAddModal(dayOfWeek, onDone) {
       title,
       icon,
     });
-    
+
     modalManager.close();
     if (onDone) onDone();
   };
@@ -401,7 +407,7 @@ async function openTemplateAddModal(dayOfWeek, onDone) {
 async function applyTemplate(date) {
   const dow = parseDate(date).getDay();
   const templates = await db.getTemplatesByDay(dow);
-  
+
   for (const t of templates) {
     await db.addSchedule({
       id: uuid(),
@@ -426,7 +432,7 @@ export function getScheduleFabAction(subPageIndex) {
     // Timeline sub-page
     const pastDay = isPast(selectedDate) && !isToday(selectedDate);
     if (pastDay && !isTemplateMode) return null; // No FAB for past days in schedule mode
-    
+
     if (isTemplateMode) {
       return () => {
         const dow = parseDate(selectedDate).getDay();
@@ -436,12 +442,91 @@ export function getScheduleFabAction(subPageIndex) {
       return () => openScheduleAddWithTemplate(selectedDate, () => renderScheduleTimeline());
     }
   } else {
-    // Tasks sub-page
-    if (taskViewMode === 'today') {
-      return () => openTaskAddModal(selectedDate, () => renderScheduleTasks());
-    }
-    return null; // No FAB for pool view
+    // Tasks sub-page — always add to task pool (date = null)
+    return () => openTaskPoolAddModal(() => renderScheduleTasks());
   }
+}
+
+// New task add modal that adds to task pool (date = null)
+async function openTaskPoolAddModal(onDone) {
+  modalManager.open({
+    title: '新增任務到任務池',
+    body: `
+      <div class="form-group">
+        <label class="form-label">任務名稱</label>
+        <input type="text" class="form-input" id="modal-input-title" placeholder="輸入任務名稱...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">完成期限（選填）</label>
+        <input type="date" class="form-input" id="modal-deadline">
+      </div>
+      <div class="form-group">
+        <label class="form-label">子任務</label>
+        <div id="modal-subtasks-list" class="subtasks-list"></div>
+        <button class="btn btn-secondary btn-small" id="modal-add-subtask" style="margin-top: 8px;">+ 新增子任務</button>
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-secondary" id="modal-cancel">取消</button>
+      <button class="btn btn-primary" id="modal-save">新增</button>
+    `,
+  });
+
+  document.getElementById('modal-add-subtask').onclick = () => {
+    const list = document.getElementById('modal-subtasks-list');
+    const div = document.createElement('div');
+    div.className = 'subtask-edit-item';
+    div.innerHTML = `
+      <input type="text" class="form-input subtask-input" placeholder="子任務名稱">
+      <button class="btn-icon text-danger subtask-delete-btn">${uiIcon('trash', 14)}</button>
+    `;
+    list.appendChild(div);
+    div.querySelector('.subtask-delete-btn').onclick = () => div.remove();
+  };
+
+  document.getElementById('modal-cancel').onclick = () => modalManager.close();
+  document.getElementById('modal-save').onclick = async () => {
+    const title = document.getElementById('modal-input-title').value.trim();
+    const deadline = document.getElementById('modal-deadline').value || null;
+
+    if (!title) return;
+
+    const taskId = uuid();
+    await db.addTask({
+      id: taskId,
+      date: null,  // null = task pool, not assigned to any day
+      title,
+      category: 'progress',
+      deadline,
+      completed: false,
+      habitId: null,
+      parentId: null,
+      order: Date.now(),
+      createdAt: Date.now(),
+    });
+
+    const subtaskInputs = document.querySelectorAll('.subtask-input');
+    for (const input of subtaskInputs) {
+      const subTitle = input.value.trim();
+      if (subTitle) {
+        await db.addTask({
+          id: uuid(),
+          date: null,
+          title: subTitle,
+          category: 'progress',
+          deadline,
+          completed: false,
+          habitId: null,
+          parentId: taskId,
+          order: Date.now(),
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    modalManager.close();
+    if (onDone) onDone();
+  };
 }
 
 async function openScheduleAddWithTemplate(date, onDone) {
@@ -450,7 +535,7 @@ async function openScheduleAddWithTemplate(date, onDone) {
       ${getIcon(ic.key)}
     </button>
   `).join('');
-  
+
   modalManager.open({
     title: '新增排程',
     body: `
@@ -467,7 +552,7 @@ async function openScheduleAddWithTemplate(date, onDone) {
       </div>
       <div class="form-group">
         <label class="form-label">事項名稱</label>
-        <input type="text" class="form-input" id="modal-title" placeholder="輸入事項名稱...">
+        <input type="text" class="form-input" id="modal-input-title" placeholder="輸入事項名稱...">
       </div>
       <div class="form-group">
         <label class="form-label">圖示</label>
@@ -482,28 +567,28 @@ async function openScheduleAddWithTemplate(date, onDone) {
       <button class="btn btn-primary" id="modal-save">新增</button>
     `,
   });
-  
+
   setupIconPicker();
-  
+
   document.getElementById('modal-apply-template').onclick = async () => {
     await applyTemplate(date);
     modalManager.close();
     if (onDone) onDone();
   };
-  
+
   document.getElementById('modal-cancel').onclick = () => modalManager.close();
   document.getElementById('modal-save').onclick = async () => {
     const startTime = document.getElementById('modal-start-time').value;
     const endTime = document.getElementById('modal-end-time').value;
-    const title = document.getElementById('modal-title').value.trim();
+    const title = document.getElementById('modal-input-title').value.trim();
     const icon = document.querySelector('.icon-option.selected')?.dataset.icon || 'default';
-    
+
     if (!title) return;
-    
+
     const [sh, sm] = startTime.split(':').map(Number);
     const [eh, em] = endTime.split(':').map(Number);
     const isOvernight = (eh * 60 + em) <= (sh * 60 + sm);
-    
+
     await db.addSchedule({
       id: uuid(),
       date,
@@ -515,7 +600,7 @@ async function openScheduleAddWithTemplate(date, onDone) {
       completed: false,
       createdAt: Date.now(),
     });
-    
+
     modalManager.close();
     if (onDone) onDone();
   };

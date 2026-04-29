@@ -1,165 +1,156 @@
 /* ========================================
-   Timeline — Core Visual Component
+   Timeline — Liquid Fill Design
    ======================================== */
 
-.timeline-container {
+/* Container */
+.tl-container {
   position: relative;
-  padding-left: 60px;
+  padding-left: 64px;
+  padding-right: 8px;
   padding-bottom: 80px;
+  padding-top: 12px;
   min-height: 100%;
 }
 
-/* Time labels on the left */
-.timeline-hour-label {
-  position: absolute;
-  left: 0;
-  width: 50px;
-  text-align: right;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  font-weight: 500;
-  transform: translateY(-50%);
-  font-variant-numeric: tabular-nums;
-}
+/* ========================================
+   Vertical Track Line
+   ======================================== */
 
-.timeline-hour-label.current-time {
-  color: var(--timeline-current-color);
-  font-weight: 700;
-}
-
-/* Track (vertical line) */
-.timeline-track {
+.tl-track {
   position: absolute;
-  left: 56px;
-  top: 0;
-  bottom: 0;
-  width: var(--timeline-width);
-  background: var(--timeline-track);
+  left: 52px;
+  width: 4px;
+  background: var(--color-bg-elevated);
   border-radius: 2px;
-  overflow: visible;
+  overflow: hidden;
+  z-index: 1;
 }
 
-/* Filled portion (up to current time) */
-.timeline-track-filled {
+/* Filled portion — the "liquid" */
+.tl-track-filled {
   position: absolute;
-  left: 0;
   top: 0;
+  left: 0;
   width: 100%;
-  background: linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, var(--color-primary-light) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--color-primary-dark) 0%,
+    var(--color-primary) 50%,
+    var(--color-primary-light) 100%
+  );
   border-radius: 2px;
   transition: height 1s linear;
 }
 
-/* Current time indicator */
-.timeline-current-indicator {
+/* ========================================
+   Time Labels (schedule boundary only)
+   ======================================== */
+
+.tl-time-label {
   position: absolute;
-  left: 56px;
-  width: var(--timeline-width);
-  transform: translateX(0) translateY(-50%);
+  left: 0;
+  width: 46px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
   z-index: 5;
-  pointer-events: none;
+  transition: color 0.3s ease;
 }
 
-.timeline-current-dot {
-  width: 12px;
-  height: 12px;
-  background: var(--timeline-current-color);
-  border-radius: var(--radius-full);
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 12px var(--timeline-current-glow), 0 0 24px var(--timeline-current-glow);
-}
-
-.timeline-current-line {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  right: -100vw;
-  height: 1px;
-  background: linear-gradient(90deg, var(--timeline-current-color), transparent 60%);
-  transform: translateY(-50%);
-  opacity: 0.4;
+.tl-time-label.tl-passed {
+  color: var(--color-primary-light);
 }
 
 /* ========================================
-   Timeline Bubble (Schedule Item)
+   Schedule Bubble
    ======================================== */
 
-.timeline-bubble-wrap {
+.tl-bubble {
   position: absolute;
-  left: 0;
-  width: 100%;
+  left: 38px;
+  right: 0;
   display: flex;
   align-items: center;
-  padding-left: 60px;
-  z-index: 2;
+  gap: 0;
+  border-radius: 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  z-index: 3;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-/* The bubble on the track */
-.timeline-bubble {
-  position: absolute;
-  left: 56px;
+/* ---- Bubble Icon (left side, overlapping the track) ---- */
+
+.tl-bubble-icon {
   width: 44px;
-  transform: translateX(-20px);
-  background: var(--timeline-bubble-bg);
-  border-radius: 22px;
+  min-width: 44px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  z-index: 3;
-  transition: background var(--transition-fast);
-  overflow: hidden;
+  position: relative;
+  z-index: 4;
+  background: var(--timeline-bubble-bg);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.timeline-bubble::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  pointer-events: none;
+.tl-bubble-icon svg {
+  width: 22px;
+  height: 22px;
+  color: rgba(255, 255, 255, 0.65);
+  transition: color 0.3s ease;
 }
 
-.timeline-bubble.filled {
-  background: var(--color-primary-dark);
-}
+/* ---- Bubble Content ---- */
 
-.timeline-bubble-icon {
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.7);
-  z-index: 1;
-}
-
-/* Content area */
-.timeline-content {
+.tl-content {
   flex: 1;
-  padding-left: 36px;
-  padding-right: 8px;
-  min-height: 60px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  cursor: pointer;
+  gap: 3px;
+  min-height: 50px;
   -webkit-tap-highlight-color: transparent;
 }
 
-.timeline-content:active {
+.tl-content:active {
   opacity: 0.7;
 }
 
-.timeline-time-text {
-  font-size: var(--font-size-sm);
+.tl-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.tl-meta {
+  font-size: 12px;
   color: var(--color-text-secondary);
-  font-weight: 400;
   display: flex;
   align-items: baseline;
   gap: 4px;
 }
 
-.timeline-time-text .overnight-badge {
+.tl-duration {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.tl-remaining {
+  font-size: 11px;
+  color: var(--color-primary-light);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.overnight-badge {
   font-size: 9px;
   color: var(--color-warning);
   font-weight: 700;
@@ -167,70 +158,165 @@
   line-height: 1;
 }
 
-.timeline-time-text .duration {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
+/* ---- Checkbox area ---- */
 
-.timeline-title {
-  font-size: var(--font-size-md);
-  font-weight: 700;
-  margin-top: 2px;
-  line-height: 1.3;
-}
-
-.timeline-remaining {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  margin-top: 2px;
-}
-
-/* Checkbox area */
-.timeline-check {
+.tl-check {
   flex-shrink: 0;
-  padding: var(--space-sm);
+  padding: 8px 12px;
 }
 
 /* ========================================
-   Timeline Item States
+   Bubble Fill (liquid inside active bubble)
    ======================================== */
 
-.timeline-item {
-  transition: opacity var(--transition-base);
+.tl-bubble-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(
+    0deg,
+    rgba(74, 124, 126, 0.25) 0%,
+    rgba(74, 124, 126, 0.08) 100%
+  );
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
+  transition: height 1s linear;
 }
 
-.timeline-item.completed .timeline-title {
+/* ========================================
+   Bubble States — Liquid Fill Mode
+   ======================================== */
+
+/* Passed: high saturation, bright */
+.tl-passed .tl-bubble-icon {
+  background: var(--color-primary-dark);
+}
+
+.tl-passed .tl-bubble-icon svg {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tl-passed {
+  border-color: rgba(74, 124, 126, 0.3);
+  background: linear-gradient(135deg, var(--color-bg-card) 0%, rgba(45, 94, 96, 0.15) 100%);
+}
+
+/* Active: glowing, prominent */
+.tl-active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 16px rgba(74, 124, 126, 0.25), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tl-active .tl-bubble-icon {
+  background: var(--color-primary);
+}
+
+.tl-active .tl-bubble-icon svg {
+  color: #fff;
+}
+
+.tl-active .tl-title {
+  color: #fff;
+}
+
+/* Future: dim, desaturated */
+.tl-future {
+  opacity: 0.55;
+  border-color: var(--color-border-light);
+}
+
+.tl-future .tl-bubble-icon {
+  background: var(--color-bg-elevated);
+}
+
+.tl-future .tl-bubble-icon svg {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* ========================================
+   Bubble States — Past Day / Schedule Page
+   ======================================== */
+
+.tl-past-done {
+  border-color: rgba(76, 175, 80, 0.2);
+  background: linear-gradient(135deg, var(--color-bg-card) 0%, rgba(76, 175, 80, 0.06) 100%);
+}
+
+.tl-past-done .tl-bubble-icon {
+  background: rgba(76, 175, 80, 0.25);
+}
+
+.tl-past-done .tl-bubble-icon svg {
+  color: var(--color-success);
+}
+
+.tl-past-undone {
+  opacity: 0.45;
+}
+
+.tl-past-undone .tl-title {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Completed */
+.tl-completed .tl-title {
   text-decoration: line-through;
   opacity: 0.5;
 }
 
-.timeline-item.dimmed {
-  opacity: 0.4;
-}
-
-.timeline-item.dimmed .timeline-bubble {
-  background: var(--color-bg-elevated);
-}
-
 /* ========================================
-   Timeline Hints (between items)
+   Current Time Indicator
    ======================================== */
 
-.timeline-hint {
+.tl-now {
   position: absolute;
-  left: 80px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  left: 38px;
+  right: 0;
+  z-index: 10;
   pointer-events: none;
-  opacity: 0.6;
+  transform: translateY(-50%);
 }
 
-.timeline-hint svg {
-  width: 14px;
-  height: 14px;
+.tl-now-dot {
+  width: 12px;
+  height: 12px;
+  background: var(--timeline-current-color);
+  border-radius: 50%;
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 10px var(--timeline-current-glow), 0 0 20px var(--timeline-current-glow);
+  z-index: 11;
+}
+
+.tl-now-line {
+  position: absolute;
+  left: 8px;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--timeline-current-color) 0%, transparent 80%);
+  transform: translateY(-50%);
+  opacity: 0.5;
+}
+
+.tl-now-text {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--timeline-current-color);
+  color: var(--color-bg);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 12px var(--timeline-current-glow);
 }
 
 /* ========================================

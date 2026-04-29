@@ -27,12 +27,63 @@ export class SwipeHandler {
     this.container.addEventListener('touchstart', (e) => this._onTouchStart(e), { passive: true });
     this.container.addEventListener('touchmove', (e) => this._onTouchMove(e), { passive: false });
     this.container.addEventListener('touchend', (e) => this._onTouchEnd(e), { passive: true });
-    
+
+    // Mouse drag support for desktop
+    this.container.addEventListener('mousedown', (e) => this._onMouseDown(e));
+    window.addEventListener('mousemove', (e) => this._onMouseMove(e));
+    window.addEventListener('mouseup', (e) => this._onMouseUp(e));
+
+    // Indicator dot click to navigate
+    this.indicators.forEach((dot, i) => {
+      dot.addEventListener('click', () => this.goTo(i));
+      dot.style.cursor = 'pointer';
+    });
+
     // Update max width on resize
     window.addEventListener('resize', () => {
       this.maxWidth = this.container.offsetWidth;
       this._updatePosition(false);
     });
+  }
+
+  _onMouseDown(e) {
+    this.startX = e.clientX;
+    this.startY = e.clientY;
+    this.currentX = 0;
+    this.isDragging = true;
+    this.isHorizontal = null;
+    this.track.classList.add('swiping');
+    e.preventDefault();
+  }
+
+  _onMouseMove(e) {
+    if (!this.isDragging) return;
+    const dx = e.clientX - this.startX;
+    const dy = e.clientY - this.startY;
+
+    if (this.isHorizontal === null && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+      this.isHorizontal = Math.abs(dx) > Math.abs(dy);
+    }
+
+    if (!this.isHorizontal) {
+      this.isDragging = false;
+      this.track.classList.remove('swiping');
+      return;
+    }
+
+    this.currentX = dx;
+    if ((this.currentIndex === 0 && dx > 0) ||
+        (this.currentIndex === this.totalPages - 1 && dx < 0)) {
+      this.currentX = dx * 0.3;
+    }
+
+    const offset = -(this.currentIndex * this.maxWidth) + this.currentX;
+    this.track.style.transform = `translateX(${offset}px)`;
+  }
+
+  _onMouseUp() {
+    if (!this.isDragging) return;
+    this._onTouchEnd();
   }
   
   _onTouchStart(e) {

@@ -351,6 +351,77 @@ body {
 }
 
 /* ========================================
+   Week Navigation (prev/next week)
+   ======================================== */
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--space-sm);
+}
+
+.week-nav .week-strip {
+  flex: 1;
+  margin-top: 0;
+}
+
+.week-nav-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.week-nav-btn:active {
+  background: var(--color-primary-bg);
+  color: var(--color-primary-light);
+}
+
+/* ========================================
+   Task Pool Item
+   ======================================== */
+
+.task-pool-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--space-sm);
+  gap: var(--space-md);
+}
+
+.task-pool-add-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px dashed var(--color-primary);
+  background: transparent;
+  color: var(--color-primary-light);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.task-pool-add-btn:active {
+  background: var(--color-primary-bg);
+}
+
+/* ========================================
    Scrollbar
    ======================================== */
 

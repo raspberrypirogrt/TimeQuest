@@ -261,7 +261,7 @@ export async function openHabitAddModal(onDone) {
     body: `
       <div class="form-group">
         <label class="form-label">習慣名稱</label>
-        <input type="text" class="form-input" id="modal-title" placeholder="例如：運動30分鐘">
+        <input type="text" class="form-input" id="modal-input-title" placeholder="例如：運動30分鐘">
       </div>
       <div class="form-group">
         <label class="form-label">啟動動作（必填）</label>
@@ -291,7 +291,7 @@ export async function openHabitAddModal(onDone) {
   
   document.getElementById('modal-cancel').onclick = () => modalManager.close();
   document.getElementById('modal-save').onclick = async () => {
-    const title = document.getElementById('modal-title').value.trim();
+    const title = document.getElementById('modal-input-title').value.trim();
     const activation = document.getElementById('modal-activation').value.trim();
     const repeatType = document.getElementById('modal-repeat-type').value;
     
@@ -329,7 +329,7 @@ async function openHabitEditModal(habit, onDone) {
     body: `
       <div class="form-group">
         <label class="form-label">習慣名稱</label>
-        <input type="text" class="form-input" id="modal-title" value="${habit.title}">
+        <input type="text" class="form-input" id="modal-input-title" value="${habit.title}">
       </div>
       <div class="form-group">
         <label class="form-label">啟動動作</label>
@@ -376,7 +376,7 @@ async function openHabitEditModal(habit, onDone) {
   
   document.getElementById('modal-cancel').onclick = () => modalManager.close();
   document.getElementById('modal-save').onclick = async () => {
-    const title = document.getElementById('modal-title').value.trim();
+    const title = document.getElementById('modal-input-title').value.trim();
     const activation = document.getElementById('modal-activation').value.trim();
     const repeatType = document.getElementById('modal-repeat-type').value;
     
