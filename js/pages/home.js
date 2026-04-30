@@ -49,9 +49,10 @@ async function renderHomeTimeline() {
   const weekDates = getWeekDates(today);
 
   let headerHtml = `
-    <div class="page-header">
+    <div class="page-header" style="position: relative;">
       <div class="page-date">${dateDisplay}</div>
       <div class="page-weekday">${weekday}</div>
+      <div style="position: absolute; right: 0; top: var(--space-lg); font-size: 12px; color: var(--color-text-muted); font-weight: 500;">v9</div>
     </div>
   `;
 
@@ -162,9 +163,10 @@ async function renderHomeTasks() {
   }
 
   let headerHtml = `
-    <div class="page-header">
+    <div class="page-header" style="position: relative;">
       <div class="page-date">${dateDisplay}</div>
       <div class="page-weekday">${weekday}</div>
+      <div style="position: absolute; right: 0; top: var(--space-lg); font-size: 12px; color: var(--color-text-muted); font-weight: 500;">v9</div>
     </div>
   `;
 

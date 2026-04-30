@@ -18,7 +18,7 @@ export class SwipeHandler {
     this.isHorizontal = null;
     
     this.threshold = 50;
-    this.maxWidth = container.offsetWidth;
+    this.maxWidth = window.innerWidth;
     
     this._bindEvents();
   }
@@ -41,7 +41,7 @@ export class SwipeHandler {
 
     // Update max width on resize
     window.addEventListener('resize', () => {
-      this.maxWidth = this.container.offsetWidth;
+      this.maxWidth = window.innerWidth;
       this._updatePosition(false);
     });
   }
@@ -149,8 +149,9 @@ export class SwipeHandler {
     if (animate) {
       this.track.classList.remove('swiping');
     }
-    const offset = -(this.currentIndex * this.maxWidth);
-    this.track.style.transform = `translateX(${offset}px)`;
+    // Use strictly 100vw to ensure perfect centering, independent of JS container width calculations
+    const offset = -(this.currentIndex * 100);
+    this.track.style.transform = `translateX(${offset}vw)`;
   }
   
   _updateIndicators() {

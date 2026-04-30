@@ -225,6 +225,9 @@ input[type="date"].form-input,
 input[type="time"].form-input {
   display: block;
   width: 100%;
+  width: -moz-available;
+  width: -webkit-fill-available;
+  width: stretch;
   min-width: 0;
   margin: 0;
   -webkit-appearance: none;
