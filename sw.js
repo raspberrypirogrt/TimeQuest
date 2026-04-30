@@ -1,4 +1,4 @@
-const CACHE_NAME = 'timequest-v9';
+const CACHE_NAME = 'timequest-v10';
 const ASSETS = [
   './',
   './index.html',
