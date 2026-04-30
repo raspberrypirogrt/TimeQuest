@@ -203,6 +203,20 @@ async function renderHomeTasks() {
         if (sub) {
           sub.completed = checked;
           await db.updateTask(sub);
+          
+          // If this subtask is a habit activation action, update habit log
+          if (sub.category === 'habit' && sub.habitId) {
+            const date = sub.date || todayStr();
+            const log = await db.getHabitLog(sub.habitId, date) || {
+              id: uuid(),
+              habitId: sub.habitId,
+              date: date,
+              habitDone: false,
+              activationDone: false,
+            };
+            log.activationDone = checked;
+            await db.setHabitLog(log);
+          }
           break;
         }
       }

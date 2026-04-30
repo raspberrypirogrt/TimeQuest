@@ -196,6 +196,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  min-width: 0;
 }
 
 .form-label {
@@ -206,6 +207,8 @@
 
 .form-input {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: var(--space-md) var(--space-lg);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
@@ -215,6 +218,17 @@
   font-family: var(--font-family);
   outline: none;
   transition: border-color var(--transition-fast);
+}
+
+/* iOS Safari specific fixes for date/time inputs */
+input[type="date"].form-input,
+input[type="time"].form-input {
+  min-width: 0;
+  padding: var(--space-md) var(--space-sm);
+  /* Ensure it doesn't break out of the container */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .form-input:focus {
@@ -229,10 +243,12 @@
   display: flex;
   gap: var(--space-md);
   align-items: flex-end;
+  min-width: 0;
 }
 
 .form-row .form-group {
   flex: 1;
+  min-width: 0;
 }
 
 .form-time-separator {
