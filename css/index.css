@@ -258,6 +258,19 @@ body {
 
 .page-header {
   padding: var(--space-lg) 0 var(--space-md);
+  position: relative;
+}
+
+.version-badge {
+  position: absolute;
+  right: 0;
+  top: var(--space-lg);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  background: var(--color-bg-elevated);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .page-date {

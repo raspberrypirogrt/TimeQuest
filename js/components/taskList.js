@@ -49,7 +49,8 @@ export function renderTaskList(container, options = {}) {
     if (groupTasks.length === 0) return '';
     let groupHtml = '';
     if (title) {
-      groupHtml += `<div class="section-title" style="margin-top: 16px; margin-bottom: 8px;">${title}</div>`;
+      groupHtml += `<div class="task-group-header">${title}</div>`;
+      groupHtml += `<div class="task-group-divider"></div>`;
     }
     groupHtml += '<div class="task-list stagger-in">';
     
@@ -62,35 +63,33 @@ export function renderTaskList(container, options = {}) {
         : '';
       
       groupHtml += `
-        <div class="task-item" data-id="${task.id}">
-          ${hasSubtasks ? `
-            <button class="task-expand-btn expanded" data-action="expand" data-id="${task.id}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
-            </button>
-          ` : '<div style="width: 8px;"></div>'}
-          <div class="task-item-info" data-action="edit" data-id="${task.id}">
-            <div class="task-item-top">
-              <span class="task-item-title">${task.title}</span>
+        <div class="task-card" data-id="${task.id}">
+          <div class="task-item">
+            <div class="task-number"></div>
+            <div class="task-item-info" data-action="edit" data-id="${task.id}">
+              <div class="task-item-top">
+                <span class="task-item-title">${task.title}</span>
+              </div>
+              <div class="task-item-meta">
+                ${deadlineHtml}
+              </div>
             </div>
-            <div class="task-item-meta">
-              ${deadlineHtml}
+            <div class="checkbox ${task.completed ? 'checked' : ''}" data-action="check" data-id="${task.id}">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
           </div>
-          <div class="checkbox ${task.completed ? 'checked' : ''}" data-action="check" data-id="${task.id}">
-            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-        </div>
       `;
       
-      // Subtasks container (expanded by default)
+      // Subtasks container
       if (hasSubtasks) {
-        groupHtml += `<div class="task-subtasks" data-parent="${task.id}" style="display: block;">`;
+        groupHtml += `<div class="task-subtasks-wrapper" data-parent="${task.id}">
+          <div class="subtask-divider"></div>
+        `;
         subtasks.forEach((sub) => {
           if (hideCompleted && sub.completed) return;
           groupHtml += `
             <div class="task-subtask" data-id="${sub.id}">
+              <div class="subtask-number"></div>
               <div class="task-item-info">
                 <span class="task-item-title">${sub.title}</span>
               </div>
@@ -102,6 +101,7 @@ export function renderTaskList(container, options = {}) {
         });
         groupHtml += `</div>`;
       }
+      groupHtml += `</div>`; // Close .task-card
     });
     
     groupHtml += '</div>';
@@ -124,13 +124,11 @@ export function renderTaskList(container, options = {}) {
       setTimeout(() => el.classList.remove('just-checked'), 400);
       
       if (!isChecked && hideCompleted) {
-        const taskItem = el.closest('.task-item');
-        if (taskItem) {
-          taskItem.classList.add('completed');
+        const taskCard = el.closest('.task-card');
+        if (taskCard) {
+          taskCard.classList.add('completed');
           setTimeout(() => {
-            taskItem.style.display = 'none';
-            const subtasksEl = container.querySelector(`[data-parent="${id}"]`);
-            if (subtasksEl) subtasksEl.style.display = 'none';
+            taskCard.style.display = 'none';
           }, 400);
         }
       }

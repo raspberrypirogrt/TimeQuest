@@ -40,6 +40,7 @@ async function renderScheduleTimeline() {
     <div class="page-header">
       <div class="page-date">${formatDateDisplay(selectedDate)}</div>
       <div class="page-weekday">${getWeekdayName(selectedDate)}</div>
+      <div class="version-badge">v14</div>
     </div>
     <div id="schedule-week-selector"></div>
   `;
@@ -230,43 +231,39 @@ async function renderTaskPool(container) {
     const hasSubtasks = subtasks.length > 0;
 
     html += `
-      <div class="task-pool-item" data-id="${task.id}">
-        ${hasSubtasks ? `
-          <button class="task-expand-btn expanded" data-action="expand-pool" data-id="${task.id}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        ` : '<div style="width: 8px;"></div>'}
-        <div class="task-item-info" data-action="edit-pool" data-id="${task.id}">
-          <div class="task-item-top">
-            <span class="task-item-title">${task.title}</span>
+      <div class="task-card" data-id="${task.id}">
+        <div class="task-pool-item" data-action="edit-pool" data-id="${task.id}" style="cursor: pointer;">
+          <div class="task-number"></div>
+          <div class="task-item-info">
+            <div class="task-item-top">
+              <span class="task-item-title">${task.title}</span>
+            </div>
+            ${task.deadline ? `<div class="task-item-meta"><span class="task-item-deadline">${uiIcon('clock', 12)} ${task.deadline}</span></div>` : ''}
           </div>
-          ${task.deadline ? `<div class="task-item-meta"><span class="task-item-deadline">${uiIcon('clock', 12)} ${task.deadline}</span></div>` : ''}
+          <button class="task-pool-add-btn" data-action="add-today" data-id="${task.id}" title="加入當天">
+            ${uiIcon('plus', 14)}
+          </button>
         </div>
-        <button class="task-pool-add-btn" data-action="add-today" data-id="${task.id}" title="加入當天">
-          ${uiIcon('plus', 14)}
-        </button>
-      </div>
     `;
 
-    // Subtasks (expanded by default)
+    // Subtasks
     if (hasSubtasks) {
-      html += `<div class="task-subtasks" data-parent="${task.id}" style="display: block;">`;
+      html += `<div class="task-subtasks-wrapper" data-parent="${task.id}">
+        <div class="subtask-divider"></div>
+      `;
       subtasks.forEach((sub) => {
         html += `
           <div class="task-subtask" data-id="${sub.id}">
+            <div class="subtask-number"></div>
             <div class="task-item-info">
               <span class="task-item-title">${sub.title}</span>
-            </div>
-            <div class="checkbox ${sub.completed ? 'checked' : ''}" data-action="pool-subcheck" data-id="${sub.id}">
-              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
           </div>
         `;
       });
       html += `</div>`;
     }
+    html += `</div>`; // End .task-card
   });
 
   html += '</div>';
