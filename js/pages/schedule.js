@@ -226,16 +226,13 @@ async function renderTaskPool(container) {
   let html = '<div class="task-list stagger-in">';
 
   topLevel.forEach((task) => {
-    const categoryTag = task.category === 'habit'
-      ? `<span class="tag tag-habit">習慣</span>`
-      : `<span class="tag tag-progress">進度</span>`;
     const subtasks = subtasksMap[task.id] || [];
     const hasSubtasks = subtasks.length > 0;
 
     html += `
       <div class="task-pool-item" data-id="${task.id}">
         ${hasSubtasks ? `
-          <button class="task-expand-btn" data-action="expand-pool" data-id="${task.id}">
+          <button class="task-expand-btn expanded" data-action="expand-pool" data-id="${task.id}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
@@ -243,7 +240,6 @@ async function renderTaskPool(container) {
         ` : '<div style="width: 8px;"></div>'}
         <div class="task-item-info" data-action="edit-pool" data-id="${task.id}">
           <div class="task-item-top">
-            ${categoryTag}
             <span class="task-item-title">${task.title}</span>
           </div>
           ${task.deadline ? `<div class="task-item-meta"><span class="task-item-deadline">${uiIcon('clock', 12)} ${task.deadline}</span></div>` : ''}
@@ -254,9 +250,9 @@ async function renderTaskPool(container) {
       </div>
     `;
 
-    // Subtasks (hidden by default)
+    // Subtasks (expanded by default)
     if (hasSubtasks) {
-      html += `<div class="task-subtasks" data-parent="${task.id}" style="display: none;">`;
+      html += `<div class="task-subtasks" data-parent="${task.id}" style="display: block;">`;
       subtasks.forEach((sub) => {
         html += `
           <div class="task-subtask" data-id="${sub.id}">

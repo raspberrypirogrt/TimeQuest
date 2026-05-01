@@ -40,64 +40,77 @@ export function renderTaskList(container, options = {}) {
     return;
   }
   
-  let html = '<div class="task-list stagger-in">';
+  const progressTasks = visibleTasks.filter(t => t.category !== 'habit');
+  const habitTasks = visibleTasks.filter(t => t.category === 'habit');
   
-  visibleTasks.forEach((task) => {
-    const subtasks = subtasksMap[task.id] || [];
-    const hasSubtasks = subtasks.length > 0;
-    const categoryTag = task.category === 'habit'
-      ? `<span class="tag tag-habit">習慣</span>`
-      : `<span class="tag tag-progress">進度</span>`;
-    
-    const deadlineHtml = task.deadline
-      ? `<span class="task-item-deadline">${uiIcon('clock', 12)} ${formatDeadline(task.deadline)}</span>`
-      : '';
-    
-    html += `
-      <div class="task-item" data-id="${task.id}">
-        ${hasSubtasks ? `
-          <button class="task-expand-btn" data-action="expand" data-id="${task.id}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        ` : '<div style="width: 8px;"></div>'}
-        <div class="task-item-info" data-action="edit" data-id="${task.id}">
-          <div class="task-item-top">
-            ${categoryTag}
-            <span class="task-item-title">${task.title}</span>
-          </div>
-          <div class="task-item-meta">
-            ${deadlineHtml}
-          </div>
-        </div>
-        <div class="checkbox ${task.completed ? 'checked' : ''}" data-action="check" data-id="${task.id}">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-      </div>
-    `;
-    
-    // Subtasks container (hidden by default)
-    if (hasSubtasks) {
-      html += `<div class="task-subtasks" data-parent="${task.id}" style="display: none;">`;
-      subtasks.forEach((sub) => {
-        if (hideCompleted && sub.completed) return;
-        html += `
-          <div class="task-subtask" data-id="${sub.id}">
-            <div class="task-item-info">
-              <span class="task-item-title">${sub.title}</span>
-            </div>
-            <div class="checkbox ${sub.completed ? 'checked' : ''}" data-action="subcheck" data-id="${sub.id}">
-              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-          </div>
-        `;
-      });
-      html += `</div>`;
+  let html = '';
+  
+  const renderGroup = (groupTasks, title) => {
+    if (groupTasks.length === 0) return '';
+    let groupHtml = '';
+    if (title) {
+      groupHtml += `<div class="section-title" style="margin-top: 16px; margin-bottom: 8px;">${title}</div>`;
     }
-  });
+    groupHtml += '<div class="task-list stagger-in">';
+    
+    groupTasks.forEach((task) => {
+      const subtasks = subtasksMap[task.id] || [];
+      const hasSubtasks = subtasks.length > 0;
+      
+      const deadlineHtml = task.deadline
+        ? `<span class="task-item-deadline">${uiIcon('clock', 12)} ${formatDeadline(task.deadline)}</span>`
+        : '';
+      
+      groupHtml += `
+        <div class="task-item" data-id="${task.id}">
+          ${hasSubtasks ? `
+            <button class="task-expand-btn expanded" data-action="expand" data-id="${task.id}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          ` : '<div style="width: 8px;"></div>'}
+          <div class="task-item-info" data-action="edit" data-id="${task.id}">
+            <div class="task-item-top">
+              <span class="task-item-title">${task.title}</span>
+            </div>
+            <div class="task-item-meta">
+              ${deadlineHtml}
+            </div>
+          </div>
+          <div class="checkbox ${task.completed ? 'checked' : ''}" data-action="check" data-id="${task.id}">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      `;
+      
+      // Subtasks container (expanded by default)
+      if (hasSubtasks) {
+        groupHtml += `<div class="task-subtasks" data-parent="${task.id}" style="display: block;">`;
+        subtasks.forEach((sub) => {
+          if (hideCompleted && sub.completed) return;
+          groupHtml += `
+            <div class="task-subtask" data-id="${sub.id}">
+              <div class="task-item-info">
+                <span class="task-item-title">${sub.title}</span>
+              </div>
+              <div class="checkbox ${sub.completed ? 'checked' : ''}" data-action="subcheck" data-id="${sub.id}">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+          `;
+        });
+        groupHtml += `</div>`;
+      }
+    });
+    
+    groupHtml += '</div>';
+    return groupHtml;
+  };
   
-  html += '</div>';
+  html += renderGroup(progressTasks, '進度任務');
+  html += renderGroup(habitTasks, '習慣任務');
+  
   container.innerHTML = html;
   
   // Bind events

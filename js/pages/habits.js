@@ -126,6 +126,21 @@ async function renderHabitStats() {
     </div>
     
     <div id="habit-calendar-container" style="margin-top: 16px;"></div>
+    
+    <!-- Backup Section -->
+    <div class="backup-section" style="margin-top: 32px; margin-bottom: 24px; padding: 16px; background: var(--color-bg-elevated); border-radius: var(--radius-md);">
+      <div style="font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: 12px; font-weight: 600;">資料備份與還原</div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-secondary" id="btn-export-data" style="flex: 1;">
+          ${uiIcon('download', 14)} 匯出備份 (JSON)
+        </button>
+        <button class="btn btn-secondary" id="btn-import-data" style="flex: 1; position: relative;">
+          ${uiIcon('upload', 14)} 匯入還原
+          <input type="file" id="input-import-file" accept=".json" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+        </button>
+      </div>
+      <div style="font-size: 11px; color: var(--color-text-muted); margin-top: 8px; text-align: center;">匯入會完全覆寫現有資料，請謹慎操作。</div>
+    </div>
   `;
   
   container.innerHTML = html;
@@ -152,6 +167,47 @@ async function renderHabitStats() {
   document.getElementById('habit-next').addEventListener('click', () => {
     selectedHabitIndex = (selectedHabitIndex + 1) % habits.length;
     renderHabitStats();
+  });
+  
+  // Backup Events
+  document.getElementById('btn-export-data').addEventListener('click', async () => {
+    try {
+      const { exportData } = await import('../backup.js');
+      const jsonData = await exportData();
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `timequest-backup-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('匯出失敗：' + e.message);
+    }
+  });
+  
+  document.getElementById('input-import-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (confirm('警告：這將會清除目前所有的資料，並替換為備份檔的內容，確定要繼續嗎？')) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const { importData } = await import('../backup.js');
+          await importData(event.target.result);
+          alert('資料還原成功！將重新載入頁面。');
+          window.location.reload();
+        } catch (err) {
+          alert('還原失敗：' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+    // reset input
+    e.target.value = '';
   });
 }
 

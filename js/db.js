@@ -132,7 +132,7 @@ export const db = {
   async getUnscheduledTasks() {
     const store = await getStore(STORES.tasks);
     const all = await promisify(store.getAll());
-    return all.filter(t => t.date === null && !t.parentId).sort((a, b) => (a.order || 0) - (b.order || 0));
+    return all.filter(t => t.date === null).sort((a, b) => (a.order || 0) - (b.order || 0));
   },
   
   async getSubtasks(parentId) {

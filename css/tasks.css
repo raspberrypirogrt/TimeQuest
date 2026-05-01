@@ -91,9 +91,9 @@
    ======================================== */
 
 .task-subtasks {
-  padding-left: 32px;
-  margin-top: 2px;
-  margin-bottom: 4px;
+  padding-left: 0;
+  margin-top: 0;
+  margin-bottom: 2px;
   overflow: hidden;
 }
 
@@ -101,22 +101,22 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
   margin-bottom: 2px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 3px solid var(--color-primary);
-  transition: background var(--transition-fast);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
+  transition: all var(--transition-base);
   position: relative;
 }
 
 .task-subtask:active {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-bg-elevated);
 }
 
 .task-subtask .task-item-info {
   flex: 1;
   min-width: 0;
+  padding-left: 48px; /* text starts at 16 + 48 = 64px, after main task's 52px */
 }
 
 .task-subtask .task-item-title {
@@ -129,6 +129,7 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+  margin-right: 2px; /* 20px + 2px = 22px, center aligns with 24px main checkbox */
 }
 
 .task-subtask .checkbox svg {
