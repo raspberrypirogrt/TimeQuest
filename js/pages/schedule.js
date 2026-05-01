@@ -105,6 +105,7 @@ async function renderScheduleTimeline() {
       schedules: templateAsSchedules,
       showFill: false,
       showCheck: false,
+      showFullTimeline: true,
       isPast: false,
       onClick: (item) => {
         openTemplateEditModal(item, parseDate(selectedDate).getDay(), () => renderScheduleTimeline());
@@ -117,6 +118,7 @@ async function renderScheduleTimeline() {
       schedules,
       showFill: false,
       showCheck: false,    // Never show checkboxes on schedule page
+      showFullTimeline: true,
       isPast: pastDay,
       onCheck: null,
       onClick: (item) => {
@@ -229,9 +231,17 @@ async function renderTaskPool(container) {
           </div>
           ${task.deadline ? `<div class="task-item-meta"><span class="task-item-deadline">${uiIcon('clock', 12)} ${task.deadline}</span></div>` : ''}
         </div>
-        <button class="task-pool-add-btn" data-action="add-today" data-id="${task.id}" title="加入當天">
-          ${uiIcon('plus', 14)}
-        </button>
+        <div class="task-pool-actions">
+          <button class="task-pool-add-btn" data-action="add-today" data-id="${task.id}" title="加入當天">
+            ${uiIcon('plus', 14)}
+          </button>
+          <button class="task-pool-add-btn" data-action="edit-pool" data-id="${task.id}" title="編輯">
+            ${uiIcon('edit', 14)}
+          </button>
+          <button class="task-pool-add-btn task-pool-delete-btn" data-action="delete-pool" data-id="${task.id}" title="刪除">
+            ${uiIcon('trash', 14)}
+          </button>
+        </div>
       </div>
     `;
   });
@@ -247,6 +257,28 @@ async function renderTaskPool(container) {
       if (task) {
         task.date = selectedDate;
         await db.updateTask(task);
+        renderScheduleTasks();
+      }
+    });
+  });
+
+  // Bind edit
+  container.querySelectorAll('[data-action="edit-pool"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        openTaskEditModal(task, () => renderScheduleTasks());
+      }
+    });
+  });
+
+  // Bind delete
+  container.querySelectorAll('[data-action="delete-pool"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      if (confirm('確定要刪除這個任務嗎？')) {
+        await db.deleteTask(id);
         renderScheduleTasks();
       }
     });

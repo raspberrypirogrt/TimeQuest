@@ -369,6 +369,7 @@ input[type="time"].form-input {
   border-radius: var(--radius-md);
   padding: 3px;
   gap: 2px;
+  margin-bottom: var(--space-lg);
 }
 
 .segment-btn {

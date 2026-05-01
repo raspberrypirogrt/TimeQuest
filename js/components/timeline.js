@@ -34,6 +34,7 @@ export function renderTimeline(container, options = {}) {
     showFill = false,
     showCheck = true,
     isPast = false,
+    showFullTimeline = false, // schedule page: show hour grid between first and last schedule
     onCheck,
     onClick,
   } = options;
@@ -77,6 +78,13 @@ export function renderTimeline(container, options = {}) {
   // Sort by start time
   items.sort((a, b) => a.startMin - b.startMin);
 
+  // ---- Full timeline mode (schedule page) ----
+  if (showFullTimeline) {
+    _renderFullTimeline(container, items, { showFill, showCheck, isPast, onCheck, onClick, nowMin, schedules });
+    return;
+  }
+
+  // ---- Compact mode (home page, original behavior) ----
   // Build layout: calculate y positions
   let yPos = 0;
   const layoutItems = [];
@@ -307,6 +315,120 @@ function formatTime(totalMin) {
   const h = Math.floor(totalMin / 60) % 24;
   const m = totalMin % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+// ========================================
+// Full Timeline Mode (schedule page)
+// Shows hour grid from first to last schedule
+// ========================================
+const FULL_PX_PER_MIN = 1.5; // slightly smaller scale for full timeline
+const FULL_HOUR_LABEL_GAP = 20; // top padding before the first hour
+
+function _renderFullTimeline(container, items, opts) {
+  const { showFill, showCheck, isPast, onCheck, onClick, nowMin, schedules } = opts;
+
+  // Determine the range: floor of earliest start → ceil of latest end
+  const earliest = items[0].startMin;
+  const latest = items[items.length - 1].endMin;
+  const gridStartMin = Math.floor(earliest / 60) * 60; // round down to hour
+  const gridEndMin = Math.ceil(latest / 60) * 60;      // round up to hour
+
+  const gridDuration = gridEndMin - gridStartMin;
+  const totalHeight = gridDuration * FULL_PX_PER_MIN + FULL_HOUR_LABEL_GAP * 2;
+
+  // Helper: convert minute to Y pixel position
+  const minToY = (min) => FULL_HOUR_LABEL_GAP + (min - gridStartMin) * FULL_PX_PER_MIN;
+
+  let html = `<div class="tl-container" style="height: ${totalHeight}px;">`;
+
+  // ---- Vertical track line ----
+  const trackTop = minToY(gridStartMin);
+  const trackBottom = minToY(gridEndMin);
+  const trackHeight = trackBottom - trackTop;
+  html += `<div class="tl-track" style="top: ${trackTop}px; height: ${trackHeight}px;"></div>`;
+
+  // ---- Hour markers ----
+  for (let m = gridStartMin; m <= gridEndMin; m += 60) {
+    const y = minToY(m);
+    const label = formatTime(m);
+    html += `<div class="tl-hour-label" style="top: ${y}px;">${label}</div>`;
+    html += `<div class="tl-hour-line" style="top: ${y}px;"></div>`;
+  }
+
+  // ---- Schedule bubbles ----
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+
+    const bubbleTop = minToY(it.startMin);
+    const bubbleBottom = minToY(it.endMin);
+    const bubbleHeight = Math.max(bubbleBottom - bubbleTop, MIN_BUBBLE_H);
+
+    // Determine fill state
+    let state = '';
+    if (isPast) {
+      state = it.completed ? 'past-done' : 'past-undone';
+    }
+
+    const bubbleClasses = [
+      'tl-bubble',
+      state ? `tl-${state}` : '',
+      it.completed ? 'tl-completed' : '',
+    ].filter(Boolean).join(' ');
+
+    const duration = durationText(it.startTime, it.endTime, it.isOvernight);
+    const overnightBadge = it.isOvernight ? `<span class="overnight-badge">⁺¹</span>` : '';
+
+    html += `
+      <div class="${bubbleClasses}" style="top: ${bubbleTop}px; height: ${bubbleHeight}px;" data-id="${it.id}">
+        <div class="tl-bubble-icon">${getIcon(it.icon || 'default')}</div>
+        <div class="tl-content" data-action="edit">
+          <div class="tl-title">${it.title}</div>
+          <div class="tl-meta">
+            ${it.startTime}–${it.endTime} ${overnightBadge}
+            <span class="tl-duration">(${duration})</span>
+          </div>
+        </div>
+        ${showCheck ? `
+          <div class="tl-check">
+            <div class="checkbox ${it.completed ? 'checked' : ''}" data-action="check" data-id="${it.id}">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+        ` : (isPast && it.completed ? `
+          <div class="tl-check">
+            <div class="checkbox checked">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+        ` : '')}
+      </div>
+    `;
+  }
+
+  html += `</div>`; // end tl-container
+  container.innerHTML = html;
+
+  // ---- Bind events ----
+  container.querySelectorAll('[data-action="check"]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = el.dataset.id;
+      const isChecked = el.classList.contains('checked');
+      el.classList.toggle('checked');
+      el.classList.add('just-checked');
+      setTimeout(() => el.classList.remove('just-checked'), 400);
+      if (onCheck) onCheck(id, !isChecked);
+    });
+  });
+
+  container.querySelectorAll('[data-action="edit"]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const wrap = el.closest('.tl-bubble');
+      const id = wrap?.dataset.id;
+      const item = schedules.find(s => s.id === id);
+      if (item && onClick) onClick(item);
+    });
+  });
 }
 
 export default renderTimeline;
