@@ -45,12 +45,12 @@ export function renderTaskList(container, options = {}) {
   
   let html = '';
   
-  const renderGroup = (groupTasks, title) => {
+  const renderGroup = (groupTasks, title, themeClass) => {
     if (groupTasks.length === 0) return '';
     let groupHtml = '';
     if (title) {
-      groupHtml += `<div class="task-group-header">${title}</div>`;
-      groupHtml += `<div class="task-group-divider"></div>`;
+      groupHtml += `<div class="task-group-header ${themeClass}">${title}</div>`;
+      groupHtml += `<div class="task-group-divider ${themeClass}"></div>`;
     }
     groupHtml += '<div class="task-list stagger-in">';
     
@@ -63,7 +63,7 @@ export function renderTaskList(container, options = {}) {
         : '';
       
       groupHtml += `
-        <div class="task-card" data-id="${task.id}">
+        <div class="task-card ${themeClass}" data-id="${task.id}">
           <div class="task-item">
             <div class="task-number"></div>
             <div class="task-item-info" data-action="edit" data-id="${task.id}">
@@ -108,8 +108,8 @@ export function renderTaskList(container, options = {}) {
     return groupHtml;
   };
   
-  html += renderGroup(progressTasks, '進度任務');
-  html += renderGroup(habitTasks, '習慣任務');
+  html += renderGroup(progressTasks, '進度任務', 'theme-progress');
+  html += renderGroup(habitTasks, '習慣任務', 'theme-habit');
   
   container.innerHTML = html;
   

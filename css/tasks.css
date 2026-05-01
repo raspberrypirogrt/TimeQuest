@@ -33,6 +33,40 @@
   margin-bottom: var(--space-md);
 }
 
+/* Progress Theme (Orange) */
+.theme-progress.task-group-header {
+  background: rgba(255, 140, 0, 0.15);
+  color: #ff9800;
+}
+.theme-progress.task-group-divider {
+  background: #ff9800;
+  opacity: 0.4;
+}
+.task-card.theme-progress .task-number {
+  color: #ff9800;
+}
+.task-card.theme-progress .subtask-divider {
+  background: #ff9800;
+  opacity: 0.25;
+}
+
+/* Habit Theme (Green) */
+.theme-habit.task-group-header {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+.theme-habit.task-group-divider {
+  background: #4caf50;
+  opacity: 0.4;
+}
+.task-card.theme-habit .task-number {
+  color: #4caf50;
+}
+.task-card.theme-habit .subtask-divider {
+  background: #4caf50;
+  opacity: 0.25;
+}
+
 /* ========================================
    Unified Task Card
    ======================================== */
