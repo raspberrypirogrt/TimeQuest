@@ -114,7 +114,7 @@ export class SwipeHandler {
       return;
     }
     
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     
     // Add resistance at edges
     this.currentX = dx;

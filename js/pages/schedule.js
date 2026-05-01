@@ -202,8 +202,10 @@ async function renderScheduleTasks() {
 
 async function renderTaskPool(container) {
   const tasks = await db.getUnscheduledTasks();
+  // Only top-level tasks in pool
+  const topLevel = tasks.filter(t => !t.parentId);
 
-  if (tasks.length === 0) {
+  if (topLevel.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -215,35 +217,60 @@ async function renderTaskPool(container) {
     return;
   }
 
+  // Build subtasks map
+  const subtasksMap = {};
+  for (const task of topLevel) {
+    subtasksMap[task.id] = tasks.filter(t => t.parentId === task.id);
+  }
+
   let html = '<div class="task-list stagger-in">';
 
-  tasks.forEach((task) => {
+  topLevel.forEach((task) => {
     const categoryTag = task.category === 'habit'
       ? `<span class="tag tag-habit">習慣</span>`
       : `<span class="tag tag-progress">進度</span>`;
+    const subtasks = subtasksMap[task.id] || [];
+    const hasSubtasks = subtasks.length > 0;
 
     html += `
       <div class="task-pool-item" data-id="${task.id}">
-        <div class="task-item-info">
+        ${hasSubtasks ? `
+          <button class="task-expand-btn" data-action="expand-pool" data-id="${task.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        ` : '<div style="width: 8px;"></div>'}
+        <div class="task-item-info" data-action="edit-pool" data-id="${task.id}">
           <div class="task-item-top">
             ${categoryTag}
             <span class="task-item-title">${task.title}</span>
           </div>
           ${task.deadline ? `<div class="task-item-meta"><span class="task-item-deadline">${uiIcon('clock', 12)} ${task.deadline}</span></div>` : ''}
         </div>
-        <div class="task-pool-actions">
-          <button class="task-pool-add-btn" data-action="add-today" data-id="${task.id}" title="加入當天">
-            ${uiIcon('plus', 14)}
-          </button>
-          <button class="task-pool-add-btn" data-action="edit-pool" data-id="${task.id}" title="編輯">
-            ${uiIcon('edit', 14)}
-          </button>
-          <button class="task-pool-add-btn task-pool-delete-btn" data-action="delete-pool" data-id="${task.id}" title="刪除">
-            ${uiIcon('trash', 14)}
-          </button>
-        </div>
+        <button class="task-pool-add-btn" data-action="add-today" data-id="${task.id}" title="加入當天">
+          ${uiIcon('plus', 14)}
+        </button>
       </div>
     `;
+
+    // Subtasks (hidden by default)
+    if (hasSubtasks) {
+      html += `<div class="task-subtasks" data-parent="${task.id}" style="display: none;">`;
+      subtasks.forEach((sub) => {
+        html += `
+          <div class="task-subtask" data-id="${sub.id}">
+            <div class="task-item-info">
+              <span class="task-item-title">${sub.title}</span>
+            </div>
+            <div class="checkbox ${sub.completed ? 'checked' : ''}" data-action="pool-subcheck" data-id="${sub.id}">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
   });
 
   html += '</div>';
@@ -251,35 +278,63 @@ async function renderTaskPool(container) {
 
   // Bind add-to-today
   container.querySelectorAll('[data-action="add-today"]').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       const id = btn.dataset.id;
-      const task = tasks.find(t => t.id === id);
+      const task = topLevel.find(t => t.id === id);
       if (task) {
         task.date = selectedDate;
         await db.updateTask(task);
+        // Also move subtasks
+        const subs = subtasksMap[task.id] || [];
+        for (const sub of subs) {
+          sub.date = selectedDate;
+          await db.updateTask(sub);
+        }
         renderScheduleTasks();
       }
     });
   });
 
-  // Bind edit
-  container.querySelectorAll('[data-action="edit-pool"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.id;
-      const task = tasks.find(t => t.id === id);
+  // Bind click on task info → open edit modal
+  container.querySelectorAll('[data-action="edit-pool"]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.id;
+      const task = topLevel.find(t => t.id === id);
       if (task) {
         openTaskEditModal(task, () => renderScheduleTasks());
       }
     });
   });
 
-  // Bind delete
-  container.querySelectorAll('[data-action="delete-pool"]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
-      if (confirm('確定要刪除這個任務嗎？')) {
-        await db.deleteTask(id);
-        renderScheduleTasks();
+  // Bind expand
+  container.querySelectorAll('[data-action="expand-pool"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = el.dataset.id;
+      el.classList.toggle('expanded');
+      const subtasksEl = container.querySelector(`[data-parent="${id}"]`);
+      if (subtasksEl) {
+        subtasksEl.style.display = subtasksEl.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+  });
+
+  // Bind subtask check
+  container.querySelectorAll('[data-action="pool-subcheck"]').forEach(el => {
+    el.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = el.dataset.id;
+      const isChecked = el.classList.contains('checked');
+      el.classList.toggle('checked');
+      // Find subtask and update
+      for (const subs of Object.values(subtasksMap)) {
+        const sub = subs.find(s => s.id === id);
+        if (sub) {
+          sub.completed = !isChecked;
+          await db.updateTask(sub);
+          break;
+        }
       }
     });
   });

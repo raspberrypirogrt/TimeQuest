@@ -306,8 +306,14 @@ export function renderTimeline(container, options = {}) {
 
   // Auto-scroll to current time
   if (showFill && currentTimeY !== null) {
-    const scrollTarget = Math.max(0, currentTimeY - container.clientHeight / 3);
-    container.scrollTop = scrollTarget;
+    // Find the scrollable parent (.sub-page)
+    const scrollParent = container.closest('.sub-page') || container;
+    // Account for any offset the timeline container has from the top of the scroll parent
+    const containerOffset = container.getBoundingClientRect().top - scrollParent.getBoundingClientRect().top + scrollParent.scrollTop;
+    const scrollTarget = Math.max(0, containerOffset + currentTimeY - scrollParent.clientHeight / 3);
+    requestAnimationFrame(() => {
+      scrollParent.scrollTop = scrollTarget;
+    });
   }
 }
 

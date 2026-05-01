@@ -186,17 +186,9 @@ async function renderHabitManage() {
       const repeatText = getRepeatText(habit);
       
       html += `
-        <div class="habit-card ${habit.active ? '' : 'inactive'}" data-id="${habit.id}">
+        <div class="habit-card ${habit.active ? '' : 'inactive'}" data-id="${habit.id}" data-action="habit-click">
           <div class="habit-card-header">
             <div class="habit-card-title">${habit.title}</div>
-            <div class="habit-card-actions">
-              <button class="btn-icon" data-action="edit" data-id="${habit.id}">
-                ${uiIcon('edit', 14)}
-              </button>
-              <button class="btn-icon" data-action="delete" data-id="${habit.id}">
-                ${uiIcon('trash', 14)}
-              </button>
-            </div>
           </div>
           <div class="habit-card-body">
             <div class="habit-card-activation">
@@ -217,25 +209,12 @@ async function renderHabitManage() {
   
   container.innerHTML = html;
   
-  // Bind events
-  container.querySelectorAll('[data-action="edit"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
+  // Bind click on card → open edit modal
+  container.querySelectorAll('[data-action="habit-click"]').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
       const habit = habits.find(h => h.id === id);
       if (habit) openHabitEditModal(habit, () => { renderHabitManage(); renderHabitStats(); });
-    });
-  });
-  
-  container.querySelectorAll('[data-action="delete"]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      if (confirm('確定要刪除這個習慣嗎？')) {
-        await db.deleteHabit(id);
-        renderHabitManage();
-        renderHabitStats();
-      }
     });
   });
 }
@@ -356,6 +335,7 @@ async function openHabitEditModal(habit, onDone) {
       </div>
     `,
     footer: `
+      <button class="btn btn-danger btn-small" id="modal-delete">${uiIcon('trash', 14)} 刪除</button>
       <button class="btn btn-secondary" id="modal-cancel">取消</button>
       <button class="btn btn-primary" id="modal-save">儲存</button>
     `,
@@ -374,6 +354,13 @@ async function openHabitEditModal(habit, onDone) {
     });
   });
   
+  document.getElementById('modal-delete').onclick = async () => {
+    if (confirm('確定要刪除這個習慣嗎？')) {
+      await db.deleteHabit(habit.id);
+      modalManager.close();
+      if (onDone) onDone();
+    }
+  };
   document.getElementById('modal-cancel').onclick = () => modalManager.close();
   document.getElementById('modal-save').onclick = async () => {
     const title = document.getElementById('modal-input-title').value.trim();
