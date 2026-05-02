@@ -52,7 +52,7 @@ async function renderHomeTimeline() {
     <div class="page-header">
       <div class="page-date">${dateDisplay}</div>
       <div class="page-weekday">${weekday}</div>
-      <div class="version-badge">v15</div>
+      <div class="version-badge">v16</div>
     </div>
   `;
 

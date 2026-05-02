@@ -29,7 +29,7 @@ async function renderHabitStats() {
     container.innerHTML = `
       <div class="page-header">
         <div class="page-date">習慣統計</div>
-        <div class="version-badge">v15</div>
+        <div class="version-badge">v16</div>
       </div>
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
@@ -92,7 +92,7 @@ async function renderHabitStats() {
   let html = `
     <div class="page-header">
       <div class="page-date">習慣統計</div>
-      <div class="version-badge">v15</div>
+      <div class="version-badge">v16</div>
     </div>
     
     <div class="stats-hero">

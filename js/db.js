@@ -153,12 +153,12 @@ export const db = {
   },
   
   async deleteTask(id) {
-    const store = await getStore(STORES.tasks, 'readwrite');
-    // Also delete subtasks
+    // Fetch subtasks first to avoid TransactionInactiveError when awaiting
     const subtasks = await this.getSubtasks(id);
     for (const st of subtasks) {
       await this.deleteTask(st.id);
     }
+    const store = await getStore(STORES.tasks, 'readwrite');
     return promisify(store.delete(id));
   },
   
@@ -185,6 +185,26 @@ export const db = {
   },
   
   async deleteHabit(id) {
+    // 1. Delete associated tasks
+    const tasksStore = await getStore(STORES.tasks);
+    const tasksIndex = tasksStore.index('habitId');
+    const tasks = await promisify(tasksIndex.getAll(id));
+    for (const t of tasks) {
+      await this.deleteTask(t.id);
+    }
+    
+    // 2. Delete associated habit logs
+    const logsStore = await getStore(STORES.habitLogs);
+    const logsIndex = logsStore.index('habitId');
+    const logs = await promisify(logsIndex.getAll(id));
+    if (logs.length > 0) {
+      const logsStoreRW = await getStore(STORES.habitLogs, 'readwrite');
+      for (const l of logs) {
+        await promisify(logsStoreRW.delete(l.id));
+      }
+    }
+    
+    // 3. Delete the habit itself
     const store = await getStore(STORES.habits, 'readwrite');
     return promisify(store.delete(id));
   },

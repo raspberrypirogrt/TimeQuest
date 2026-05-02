@@ -40,7 +40,7 @@ async function renderScheduleTimeline() {
     <div class="page-header">
       <div class="page-date">${formatDateDisplay(selectedDate)}</div>
       <div class="page-weekday">${getWeekdayName(selectedDate)}</div>
-      <div class="version-badge">v15</div>
+      <div class="version-badge">v16</div>
     </div>
     <div id="schedule-week-selector"></div>
   `;
